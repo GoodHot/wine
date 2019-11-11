@@ -1,0 +1,5 @@
+# Dependency directories
+.idea/
+target/
+
+*.iml
