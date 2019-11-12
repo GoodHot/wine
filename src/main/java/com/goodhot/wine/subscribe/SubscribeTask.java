@@ -36,7 +36,7 @@ public class SubscribeTask {
             String status = content.text();
             if (status.contains("可预约")) {
                 // TODO: 2019-11-11 0011 发送短信
-                System.out.println(status);
+                System.out.println("\t\t" + status);
             } else {
                 System.out.println(status);
             }
