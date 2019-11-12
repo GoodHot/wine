@@ -25,7 +25,9 @@ public class SubscribeTask {
         // http://kwemobile.bceapp.com/maotai.php
         HttpRequest.proxyHost(proxyServer.getHost());
         HttpRequest.proxyPort(Integer.parseInt(proxyServer.getPort()));
-        HttpRequest req = HttpRequest.get("http://kwemobile.bceapp.com/maotai.php").header("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.87 Mobile Safari/537.36");
+        HttpRequest req =
+                HttpRequest.get(NanHangRequest.NAN_HANG_URL)
+                        .header(NanHangRequest.USER_AGENT_NAME, NanHangRequest.USER_AGENT_VALUE);
         String body = req.body();
         Document doc = Jsoup.parse(body);
         Elements result = doc.select(".pet_hd_con_gp_list");
