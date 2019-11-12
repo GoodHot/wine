@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Service
 public class SubscribeTask {
@@ -18,17 +19,20 @@ public class SubscribeTask {
     @Autowired
     private HttpProxyTask httpProxyTask;
 
-    public void task() throws IOException {
+    @Autowired
+    private NanHangRequest nanHangRequest;
+
+    @Autowired
+    private Customer customer;
+
+    public void task() throws Exception {
         // 获取代理服务器
         HttpServer proxyServer = httpProxyTask.getOne();
         System.out.println("================开始获取数据 " + proxyServer + "================");
-        // http://kwemobile.bceapp.com/maotai.php
         HttpRequest.proxyHost(proxyServer.getHost());
         HttpRequest.proxyPort(Integer.parseInt(proxyServer.getPort()));
-        HttpRequest req =
-                HttpRequest.get(NanHangRequest.NAN_HANG_URL)
-                        .header(NanHangRequest.USER_AGENT_NAME, NanHangRequest.USER_AGENT_VALUE);
-        String body = req.body();
+        HttpRequest nanHangReq = nanHangRequest.getPage(NanHangRequest.NAN_HANG_URL);
+        String body = nanHangReq.body();
         Document doc = Jsoup.parse(body);
         Elements result = doc.select(".pet_hd_con_gp_list");
         Element sub = result.get(1);
@@ -39,6 +43,15 @@ public class SubscribeTask {
             if (status.contains("可预约")) {
                 // TODO: 2019-11-11 0011 发送短信
                 System.out.println("\t\t" + status);
+                String date = status.replace("可预约", "");
+                if (customer.whetherMatchDateCustomer(date)) {
+                    // TODO: 2019-11-13 多线程
+                    for (Map<String, String> c : customer.listMatchDate(date)) {
+                        c.put(Customer.CODE, nanHangRequest.getCaptcha(nanHangRequest.getCookieMaotai()));
+                        nanHangRequest.postSubscribe(c);
+                    }
+                }
+
             } else {
                 System.out.println(status);
             }

@@ -1,9 +1,11 @@
 package com.goodhot.wine.subscribe;
 
 import com.github.kevinsawicki.http.HttpRequest;
-import com.goodhot.wine.proxy.HttpProxyTask;
+import com.goodhot.wine.fateadm.Api;
+import com.goodhot.wine.fateadm.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Map;
@@ -13,7 +15,7 @@ public class NanHangRequest {
     // 网址
     public static final String NAN_HANG_URL = "http://kwemobile.bceapp.com/maotai.php";
     public static final String NAN_HANG_VERIFY_URL = "http://kwemobile.bceapp.com/maotai.php/index/verify";
-    public static final String NAN_HANG_SUBSCRIBE_URL = "http://kwemobile.bceapp.com/maotai.php/index/verify";
+    public static final String NAN_HANG_SUBSCRIBE_URL = "http://kwemobile.bceapp.com/maotai.php/index/addenroll.html";
 
     // Header名
     public static final String USER_AGENT_NAME = "User-Agent";
@@ -27,7 +29,7 @@ public class NanHangRequest {
 
 
     @Autowired
-    private HttpProxyTask httpProxyTask;
+    private Api fateadmApi;
 
     /**
      * 网页两个cookie之一
@@ -49,6 +51,8 @@ public class NanHangRequest {
         HttpRequest req =
                 HttpRequest.get(url)
                         .header(USER_AGENT_NAME, USER_AGENT_VALUE);
+        setCookieMaotai(req, url);
+        setCookiePhpSession(req, url);
         return req;
     }
 
@@ -56,19 +60,34 @@ public class NanHangRequest {
      * 获取cookie maotai
      *
      * @param req
+     * @param url
      */
-    public void setCookieMaotai(HttpRequest req) {
-        this.cookieMaotai = req.header(SET_COOKIE_NAME);
+    public void setCookieMaotai(HttpRequest req, String url) {
+        if (!url.equals(NAN_HANG_URL)) {
+            return;
+        }
+        this.cookieMaotai = req.header(SET_COOKIE_NAME).split(";")[0].split("=")[1];
         System.out.println("cookie maotai: " + this.cookieMaotai);
+    }
+
+    public String getCookieMaotai() throws Exception {
+        if (StringUtils.isEmpty(this.cookieMaotai)) {
+            throw new Exception("cookieMaotai为空");
+        }
+        return this.cookieMaotai;
     }
 
     /**
      * 获取cookie phpsession
      *
      * @param req
+     * @param url
      */
-    public void setCookiePhpSession(HttpRequest req) {
-        this.cookiePhpSession = req.header(SET_COOKIE_NAME);
+    public void setCookiePhpSession(HttpRequest req, String url) {
+        if (!url.equals(NAN_HANG_VERIFY_URL)) {
+            return;
+        }
+        this.cookiePhpSession = req.header(SET_COOKIE_NAME).split(";")[0].split("=")[1];
         System.out.println("coolie phpsession: " + this.cookiePhpSession);
     }
 
@@ -76,16 +95,22 @@ public class NanHangRequest {
      * 提交预约请求
      *
      * @param formData
-     * @return
      */
-    public void postSubscribe(HttpRequest req, Map<String, String> formData, String cookiePhpSession, String cookieMaotai) {
+    public void postSubscribe(Map<String, String> formData) throws Exception {
+        if (StringUtils.isEmpty(cookiePhpSession)) {
+            throw new Exception("cookiePhpSession为空");
+        }
+        if (StringUtils.isEmpty(cookieMaotai)) {
+            throw new Exception("cookieMaotai为空");
+        }
+
         final String ILLEGAL = "非法访问";
         final String OUTTIME_CAPTCHA = "验证码错误"; // 可能不存在了
         final String ALREADY_DONE = "该票号已经预约过";
         final String NO_EMPTY = "该日期预约数量已满";
         final String OK = "预约成功";
 
-        req.post(NAN_HANG_SUBSCRIBE_URL)
+        HttpRequest req = HttpRequest.post(NAN_HANG_SUBSCRIBE_URL)
                 .header(CONTENT_TYPE_NAME, CONTENT_TYPE_VALUE_X_WWW_FORM)
                 .header(COOKIE_NAME, cookiePhpSession + " ;" + cookieMaotai)
                 .form(formData);
@@ -109,8 +134,22 @@ public class NanHangRequest {
      * @param cookieMaotai
      * @return
      */
-    public String getCaptcha(String cookieMaotai) {
-        return "";
+    public String getCaptcha(String cookieMaotai) throws Exception {
+        HttpRequest req = HttpRequest.get(NAN_HANG_VERIFY_URL)
+                .header(USER_AGENT_NAME, USER_AGENT_VALUE)
+                .header(COOKIE_NAME, cookieMaotai);
+        Util.HttpResp rst = fateadmApi.Predict("10500", req.body().getBytes());
+        if (rst.ret_code != 0) {
+            throw new Exception(rst.err_msg);
+        }
+        return rst.pred_resl;
+    }
+
+    public static void main(String[] args) {
+        HttpRequest r = HttpRequest.get(NAN_HANG_VERIFY_URL)
+                .header(USER_AGENT_NAME, USER_AGENT_VALUE)
+                .header(COOKIE_NAME, "maotai=aaaaaaa");
+        System.out.println();
     }
 
 }

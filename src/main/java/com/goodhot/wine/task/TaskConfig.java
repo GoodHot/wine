@@ -18,7 +18,7 @@ public class TaskConfig {
     private HttpProxyTask httpProxyTask;
 
     @Scheduled(cron = "0/5 * * * * ?")
-    public void schedule(){
+    public void schedule() throws Exception {
         try {
             subscribeService.task();
         } catch (IOException e) {
