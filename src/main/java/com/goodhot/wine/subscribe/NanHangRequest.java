@@ -49,10 +49,9 @@ public class NanHangRequest {
      * @throws IOException
      */
     public HttpRequest getPage(String url, HttpProxyServer proxyServer) throws IOException {
-        HttpRequest req =
-                HttpRequest.get(url)
-                        .header(USER_AGENT_NAME, USER_AGENT_VALUE);
+        HttpRequest req = HttpRequest.get(url);
         setProxyServer(req, proxyServer);
+        req.header(USER_AGENT_NAME, USER_AGENT_VALUE);
         setCookieMaotai(req, url);
         setCookiePhpSession(req, url);
         return req;
@@ -112,11 +111,11 @@ public class NanHangRequest {
         final String NO_EMPTY = "该日期预约数量已满";
         final String OK = "预约成功";
 
-        HttpRequest req = HttpRequest.post(NAN_HANG_SUBSCRIBE_URL)
-                .header(CONTENT_TYPE_NAME, CONTENT_TYPE_VALUE_X_WWW_FORM)
+        HttpRequest req = HttpRequest.post(NAN_HANG_SUBSCRIBE_URL);
+        setProxyServer(req, proxy);
+        req.header(CONTENT_TYPE_NAME, CONTENT_TYPE_VALUE_X_WWW_FORM)
                 .header(COOKIE_NAME, cookiePhpSession + " ;" + cookieMaotai)
                 .form(formData);
-        setProxyServer(req, proxy);
         String body = req.body();
         if (body.contains(ILLEGAL) || body.contains(OUTTIME_CAPTCHA)) {
             System.out.println(ILLEGAL + " " + formData);
@@ -138,10 +137,10 @@ public class NanHangRequest {
      * @return
      */
     public String getCaptcha(String cookieMaotai, HttpProxyServer proxyServer) throws Exception {
-        HttpRequest req = HttpRequest.get(NAN_HANG_VERIFY_URL)
-                .header(USER_AGENT_NAME, USER_AGENT_VALUE)
-                .header(COOKIE_NAME, cookieMaotai);
+        HttpRequest req = HttpRequest.get(NAN_HANG_VERIFY_URL);
         setProxyServer(req, proxyServer);
+        req.header(USER_AGENT_NAME, USER_AGENT_VALUE)
+                .header(COOKIE_NAME, cookieMaotai);
         // 10500 代表 5位数字验证码
         Util.HttpResp rst = fateadmApi.Predict("10500", req.body().getBytes());
         if (rst.ret_code != 0) {
