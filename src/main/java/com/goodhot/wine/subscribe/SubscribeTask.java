@@ -2,7 +2,7 @@ package com.goodhot.wine.subscribe;
 
 import com.github.kevinsawicki.http.HttpRequest;
 import com.goodhot.wine.proxy.HttpProxyTask;
-import com.goodhot.wine.proxy.HttpServer;
+import com.goodhot.wine.proxy.HttpProxyServer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,7 +10,6 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Map;
 
 @Service
@@ -27,11 +26,11 @@ public class SubscribeTask {
 
     public void task() throws Exception {
         // 获取代理服务器
-        HttpServer proxyServer = httpProxyTask.getOne();
+        HttpProxyServer proxyServer = httpProxyTask.getOne();
         System.out.println("================开始获取数据 " + proxyServer + "================");
-        HttpRequest.proxyHost(proxyServer.getHost());
-        HttpRequest.proxyPort(Integer.parseInt(proxyServer.getPort()));
-        HttpRequest nanHangReq = nanHangRequest.getPage(NanHangRequest.NAN_HANG_URL);
+        // HttpRequest.proxyHost(proxyServer.getHost());
+        // HttpRequest.proxyPort(Integer.parseInt(proxyServer.getPort()));
+        HttpRequest nanHangReq = nanHangRequest.getPage(NanHangRequest.NAN_HANG_URL, proxyServer);
         String body = nanHangReq.body();
         Document doc = Jsoup.parse(body);
         Elements result = doc.select(".pet_hd_con_gp_list");
@@ -47,8 +46,9 @@ public class SubscribeTask {
                 if (customer.whetherMatchDateCustomer(date)) {
                     // TODO: 2019-11-13 多线程
                     for (Map<String, String> c : customer.listMatchDate(date)) {
-                        c.put(Customer.CODE, nanHangRequest.getCaptcha(nanHangRequest.getCookieMaotai()));
-                        nanHangRequest.postSubscribe(c);
+                        HttpProxyServer proxy = httpProxyTask.getOne();
+                        c.put(Customer.CODE, nanHangRequest.getCaptcha(nanHangRequest.getCookieMaotai(), proxy));
+                        nanHangRequest.postSubscribe(c, proxy);
                     }
                 }
 

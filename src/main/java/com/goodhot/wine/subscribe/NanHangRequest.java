@@ -3,6 +3,7 @@ package com.goodhot.wine.subscribe;
 import com.github.kevinsawicki.http.HttpRequest;
 import com.goodhot.wine.fateadm.Api;
 import com.goodhot.wine.fateadm.Util;
+import com.goodhot.wine.proxy.HttpProxyServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -47,10 +48,11 @@ public class NanHangRequest {
      * @return
      * @throws IOException
      */
-    public HttpRequest getPage(String url) throws IOException {
+    public HttpRequest getPage(String url, HttpProxyServer proxyServer) throws IOException {
         HttpRequest req =
                 HttpRequest.get(url)
                         .header(USER_AGENT_NAME, USER_AGENT_VALUE);
+        setProxyServer(req, proxyServer);
         setCookieMaotai(req, url);
         setCookiePhpSession(req, url);
         return req;
@@ -96,7 +98,7 @@ public class NanHangRequest {
      *
      * @param formData
      */
-    public void postSubscribe(Map<String, String> formData) throws Exception {
+    public void postSubscribe(Map<String, String> formData, HttpProxyServer proxy) throws Exception {
         if (StringUtils.isEmpty(cookiePhpSession)) {
             throw new Exception("cookiePhpSession为空");
         }
@@ -114,6 +116,7 @@ public class NanHangRequest {
                 .header(CONTENT_TYPE_NAME, CONTENT_TYPE_VALUE_X_WWW_FORM)
                 .header(COOKIE_NAME, cookiePhpSession + " ;" + cookieMaotai)
                 .form(formData);
+        setProxyServer(req, proxy);
         String body = req.body();
         if (body.contains(ILLEGAL) || body.contains(OUTTIME_CAPTCHA)) {
             System.out.println(ILLEGAL + " " + formData);
@@ -134,15 +137,25 @@ public class NanHangRequest {
      * @param cookieMaotai
      * @return
      */
-    public String getCaptcha(String cookieMaotai) throws Exception {
+    public String getCaptcha(String cookieMaotai, HttpProxyServer proxyServer) throws Exception {
         HttpRequest req = HttpRequest.get(NAN_HANG_VERIFY_URL)
                 .header(USER_AGENT_NAME, USER_AGENT_VALUE)
                 .header(COOKIE_NAME, cookieMaotai);
+        setProxyServer(req, proxyServer);
         Util.HttpResp rst = fateadmApi.Predict("10500", req.body().getBytes());
         if (rst.ret_code != 0) {
             throw new Exception(rst.err_msg);
         }
         return rst.pred_resl;
+    }
+
+    private void setProxyServer(HttpRequest req, HttpProxyServer proxyServer){
+        if (proxyServer != null) {
+            req.useProxy(proxyServer.getHost(), Integer.parseInt(proxyServer.getPort()));
+            if (proxyServer.isNeedAuth()) {
+                req.proxyBasic(proxyServer.getUsername(), proxyServer.getPassword());
+            }
+        }
     }
 
     public static void main(String[] args) {

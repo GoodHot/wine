@@ -5,9 +5,12 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class HttpServer {
+public class HttpProxyServer {
 
     private String host;
     private String port;
+    private boolean needAuth;
+    private String username;
+    private String password;
 
 }

@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class HttpProxyTask {
 
-    private static BlockingQueue<HttpServer> PROXY_QUEUE = new LinkedBlockingQueue<>();
+    private static BlockingQueue<HttpProxyServer> PROXY_QUEUE = new LinkedBlockingQueue<>();
 
     public void getProxy() throws IOException {
         // https://www.xicidaili.com/wt/
@@ -27,14 +27,15 @@ public class HttpProxyTask {
             Elements data = elem.getElementsByTag("td");
             Element host = data.get(1);
             Element port = data.get(2);
-            HttpServer server = new HttpServer(host.html(), port.html());
+            // TODO: 2019-11-13 0013 查询代理服务器用户密码
+            HttpProxyServer server = new HttpProxyServer(host.html(), port.html(), false, null, null);
             System.out.println("获取代理服务器：" + server);
             PROXY_QUEUE.add(server);
         }
     }
 
-    public HttpServer getOne() throws IOException {
-        HttpServer server = null;
+    public HttpProxyServer getOne() throws IOException {
+        HttpProxyServer server = null;
         try {
             server = PROXY_QUEUE.poll(3, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
