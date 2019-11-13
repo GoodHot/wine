@@ -10,9 +10,6 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.util.Map;
-
 @Service
 public class SubscribeTask {
 
@@ -53,7 +50,7 @@ public class SubscribeTask {
                     for (CustomerData.Customer c : customerUtil.listMatchDate(date)) {
                         HttpProxyServer proxy = httpProxyTask.getOne();
                         c.setCode(nanHangRequest.getCaptcha(nanHangRequest.getCookieMaotai(), proxy));
-                        nanHangRequest.postSubscribe(c.toMap(), proxy);
+                        nanHangRequest.postSubscribe(c.toMap(date), proxy);
                     }
                 }
 
@@ -64,14 +61,13 @@ public class SubscribeTask {
         System.out.println("================获取数据结束================");
     }
 
-    public static void main(String[] args) throws Exception {
-        HttpProxyServer proxy = new HttpProxyTask().getOne();
-        NanHangRequest nanHangRequest = new NanHangRequest();
+    public void test() throws Exception {
+        HttpProxyServer proxy = httpProxyTask.getOne();
         nanHangRequest.getPage(NanHangRequest.NAN_HANG_URL, proxy);
-        CustomerUtil customerUtil = new CustomerUtil().init(CustomerData.mockCustomerDate());
+        customerUtil.init(CustomerData.mockCustomerDate());
         for (CustomerData.Customer c : customerUtil.listMatchDate("11月15日 上午")) {
             c.setCode(nanHangRequest.getCaptcha(nanHangRequest.getCookieMaotai(), proxy));
-            nanHangRequest.postSubscribe(c.toMap(), proxy);
+            nanHangRequest.postSubscribe(c.toMap("11月15日 上午"), proxy);
         }
     }
 

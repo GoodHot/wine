@@ -43,7 +43,7 @@ public class CustomerData {
         private String service;
         private String secret;
 
-        public Map<String, String> toMap() {
+        public Map<String, String> toMap(String enrollDate) {
             Map<String, String> r = new HashMap<>();
             r.put(MEMBER, member);
             r.put(NAME, name);
@@ -53,8 +53,8 @@ public class CustomerData {
             r.put(SETOFF, setoff);
             r.put(ARRIVE, arrive);
             r.put(FLT_DATE, fltDate);
-            r.put(ENROLL_DATE, "");
-            r.put(CODE, "");
+            r.put(ENROLL_DATE, enrollDate);
+            r.put(CODE, code);
             r.put(SERVICE, "on");
             r.put(SECRET, "on");
 

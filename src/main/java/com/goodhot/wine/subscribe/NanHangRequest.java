@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
@@ -52,8 +54,7 @@ public class NanHangRequest {
         HttpRequest req = HttpRequest.get(url);
         setProxyServer(req, proxyServer);
         req.header(USER_AGENT_NAME, USER_AGENT_VALUE);
-        setCookieMaotai(req, url);
-        setCookiePhpSession(req, url);
+        setCookieMaotai(req);
         return req;
     }
 
@@ -61,12 +62,8 @@ public class NanHangRequest {
      * 获取cookie maotai
      *
      * @param req
-     * @param url
      */
-    public void setCookieMaotai(HttpRequest req, String url) {
-        if (!url.equals(NAN_HANG_URL)) {
-            return;
-        }
+    public void setCookieMaotai(HttpRequest req) {
         this.cookieMaotai = req.header(SET_COOKIE_NAME).split(";")[0].split("=")[1];
         System.out.println("cookie maotai: " + this.cookieMaotai);
     }
@@ -82,12 +79,8 @@ public class NanHangRequest {
      * 获取cookie phpsession
      *
      * @param req
-     * @param url
      */
-    public void setCookiePhpSession(HttpRequest req, String url) {
-        if (!url.equals(NAN_HANG_VERIFY_URL)) {
-            return;
-        }
+    public void setCookiePhpSession(HttpRequest req) {
         this.cookiePhpSession = req.header(SET_COOKIE_NAME).split(";")[0].split("=")[1];
         System.out.println("coolie phpsession: " + this.cookiePhpSession);
     }
@@ -118,15 +111,27 @@ public class NanHangRequest {
                 .form(formData);
         String body = req.body();
         if (body.contains(ILLEGAL) || body.contains(OUTTIME_CAPTCHA)) {
-            System.out.println(ILLEGAL + " " + formData);
+            System.out.println(ILLEGAL +
+                    " cookiePhpSession：" + cookiePhpSession +
+                    " cookieMaotai：" + cookieMaotai +
+                    " - " + formData);
             // 刷新
             // cookie maotai -> 验证码 -> 打码平台 -> 提交
         } else if (body.contains(ALREADY_DONE)) {
-            System.out.println(ALREADY_DONE + " " + formData);
+            System.out.println(ALREADY_DONE +
+                    " cookiePhpSession：" + cookiePhpSession +
+                    " cookieMaotai：" + cookieMaotai +
+                    " - " + formData);
         } else if (body.contains(NO_EMPTY)) {
-            System.out.println(NO_EMPTY + " " + formData);
+            System.out.println(NO_EMPTY +
+                    " cookiePhpSession：" + cookiePhpSession +
+                    " cookieMaotai：" + cookieMaotai +
+                    " - " + formData);
         } else {
-            System.out.println(OK + " " + formData);
+            System.out.println(OK +
+                    " cookiePhpSession：" + cookiePhpSession +
+                    " cookieMaotai：" + cookieMaotai +
+                    " - " + formData);
         }
     }
 
@@ -141,15 +146,28 @@ public class NanHangRequest {
         setProxyServer(req, proxyServer);
         req.header(USER_AGENT_NAME, USER_AGENT_VALUE)
                 .header(COOKIE_NAME, cookieMaotai);
+        setCookiePhpSession(req);
+
+        ByteArrayOutputStream bufferOut = new ByteArrayOutputStream();
+        BufferedInputStream is = req.buffer();
+        byte[] buffer = new byte[1024];
+        int buf = 0;
+        while (-1 != (buf = is.read(buffer))) {
+            bufferOut.write(buffer, 0, buf);
+        }
+        is.close();
+        bufferOut.close();
+        byte[] response = bufferOut.toByteArray();
+
         // 10500 代表 5位数字验证码
-        Util.HttpResp rst = fateadmApi.Predict("10500", req.body().getBytes());
+        Util.HttpResp rst = fateadmApi.Predict("10500", response);
         if (rst.ret_code != 0) {
             throw new Exception(rst.err_msg);
         }
         return rst.pred_resl;
     }
 
-    private void setProxyServer(HttpRequest req, HttpProxyServer proxyServer){
+    private void setProxyServer(HttpRequest req, HttpProxyServer proxyServer) {
         if (proxyServer != null) {
             req.useProxy(proxyServer.getHost(), Integer.parseInt(proxyServer.getPort()));
             if (proxyServer.isNeedAuth()) {
