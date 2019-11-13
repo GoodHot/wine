@@ -41,6 +41,7 @@ public class CustomerUtil {
      *                     }
      */
     public CustomerUtil init(String customerJson) {
+        System.out.println("========初始化客户：" + customerJson);
         this.customerData = JSON.parseObject(customerJson, CustomerData.class);
         Multimap<String, CustomerData.Customer> temp = ArrayListMultimap.create();
         for (CustomerData.Customer customer : this.customerData.getCustomers()) {
@@ -49,6 +50,7 @@ public class CustomerUtil {
             }
         }
         this.customerDataMap = temp;
+        System.out.println("========初始化客户完成");
         return this;
     }
 
