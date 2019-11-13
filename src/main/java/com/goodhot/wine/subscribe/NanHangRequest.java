@@ -29,6 +29,8 @@ public class NanHangRequest {
 
     public static final String SET_COOKIE_NAME = "Set-Cookie";
     public static final String COOKIE_NAME = "Cookie";
+    public static final String COOKIE_PHPSESSID_NAME = "PHPSESSID";
+    public static final String COOKIE_MAOTAI_NAME = "maotai";
 
 
     @Autowired
@@ -37,7 +39,7 @@ public class NanHangRequest {
     /**
      * 网页两个cookie之一
      */
-    private String cookiePhpSession;
+    private String cookiePHPSESSID;
 
     /**
      * 网页两个cookie之二
@@ -80,9 +82,9 @@ public class NanHangRequest {
      *
      * @param req
      */
-    public void setCookiePhpSession(HttpRequest req) {
-        this.cookiePhpSession = req.header(SET_COOKIE_NAME).split(";")[0].split("=")[1];
-        System.out.println("coolie phpsession: " + this.cookiePhpSession);
+    public void setCookiePHPSESSID(HttpRequest req) {
+        this.cookiePHPSESSID = req.header(SET_COOKIE_NAME).split(";")[0].split("=")[1];
+        System.out.println("coolie phpsession: " + this.cookiePHPSESSID);
     }
 
     /**
@@ -91,7 +93,7 @@ public class NanHangRequest {
      * @param formData
      */
     public void postSubscribe(Map<String, String> formData, HttpProxyServer proxy) throws Exception {
-        if (StringUtils.isEmpty(cookiePhpSession)) {
+        if (StringUtils.isEmpty(cookiePHPSESSID)) {
             throw new Exception("cookiePhpSession为空");
         }
         if (StringUtils.isEmpty(cookieMaotai)) {
@@ -107,29 +109,31 @@ public class NanHangRequest {
         HttpRequest req = HttpRequest.post(NAN_HANG_SUBSCRIBE_URL);
         setProxyServer(req, proxy);
         req.header(CONTENT_TYPE_NAME, CONTENT_TYPE_VALUE_X_WWW_FORM)
-                .header(COOKIE_NAME, cookiePhpSession + " ;" + cookieMaotai)
+                .header(COOKIE_NAME,
+                        COOKIE_PHPSESSID_NAME + "=" + cookiePHPSESSID + " ;" + COOKIE_MAOTAI_NAME + "=" + cookieMaotai)
                 .form(formData);
         String body = req.body();
+        System.out.println("Response body: " + body);
         if (body.contains(ILLEGAL) || body.contains(OUTTIME_CAPTCHA)) {
             System.out.println(ILLEGAL +
-                    " cookiePhpSession：" + cookiePhpSession +
+                    " cookiePHPSESSID：" + cookiePHPSESSID +
                     " cookieMaotai：" + cookieMaotai +
                     " - " + formData);
             // 刷新
             // cookie maotai -> 验证码 -> 打码平台 -> 提交
         } else if (body.contains(ALREADY_DONE)) {
             System.out.println(ALREADY_DONE +
-                    " cookiePhpSession：" + cookiePhpSession +
+                    " cookiePHPSESSID：" + cookiePHPSESSID +
                     " cookieMaotai：" + cookieMaotai +
                     " - " + formData);
         } else if (body.contains(NO_EMPTY)) {
             System.out.println(NO_EMPTY +
-                    " cookiePhpSession：" + cookiePhpSession +
+                    " cookiePHPSESSID：" + cookiePHPSESSID +
                     " cookieMaotai：" + cookieMaotai +
                     " - " + formData);
         } else {
             System.out.println(OK +
-                    " cookiePhpSession：" + cookiePhpSession +
+                    " cookiePHPSESSID：" + cookiePHPSESSID +
                     " cookieMaotai：" + cookieMaotai +
                     " - " + formData);
         }
@@ -146,7 +150,7 @@ public class NanHangRequest {
         setProxyServer(req, proxyServer);
         req.header(USER_AGENT_NAME, USER_AGENT_VALUE)
                 .header(COOKIE_NAME, cookieMaotai);
-        setCookiePhpSession(req);
+        setCookiePHPSESSID(req);
 
         ByteArrayOutputStream bufferOut = new ByteArrayOutputStream();
         BufferedInputStream is = req.buffer();
@@ -160,10 +164,11 @@ public class NanHangRequest {
         byte[] response = bufferOut.toByteArray();
 
         // 10500 代表 5位数字验证码
-        Util.HttpResp rst = fateadmApi.Predict("10500", response);
+        Util.HttpResp rst = fateadmApi.Predict("40500", response);
         if (rst.ret_code != 0) {
             throw new Exception(rst.err_msg);
         }
+        System.out.println("验证码：" + rst.pred_resl);
         return rst.pred_resl;
     }
 
@@ -174,6 +179,14 @@ public class NanHangRequest {
                 req.proxyBasic(proxyServer.getUsername(), proxyServer.getPassword());
             }
         }
+    }
+
+    private void setCommonHeader(HttpRequest req) {
+        req.header(USER_AGENT_NAME, USER_AGENT_VALUE)
+                .header("Accept", "*/*")
+                .header("Cache-Control", "no-cache")
+                .header("Host", "no-cache")
+        ;
     }
 
     public static void main(String[] args) {
