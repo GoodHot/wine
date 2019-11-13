@@ -49,12 +49,13 @@ public class NanHangRequest {
      * @throws IOException
      */
     public HttpRequest getPage(String url, HttpProxyServer proxyServer) throws IOException {
-        HttpRequest req =
-                HttpRequest.get(url)
-                        .header(USER_AGENT_NAME, USER_AGENT_VALUE);
+        System.out.println("==========访问：" + url);
+        HttpRequest req = HttpRequest.get(url);
         setProxyServer(req, proxyServer);
+        req.header(USER_AGENT_NAME, USER_AGENT_VALUE);
         setCookieMaotai(req, url);
         setCookiePhpSession(req, url);
+        System.out.println("==========访问 code：" + req.code());
         return req;
     }
 
@@ -150,7 +151,7 @@ public class NanHangRequest {
         return rst.pred_resl;
     }
 
-    private void setProxyServer(HttpRequest req, HttpProxyServer proxyServer){
+    private void setProxyServer(HttpRequest req, HttpProxyServer proxyServer) {
         if (proxyServer != null) {
             req.useProxy(proxyServer.getHost(), Integer.parseInt(proxyServer.getPort()));
             if (proxyServer.isNeedAuth()) {
@@ -160,10 +161,16 @@ public class NanHangRequest {
     }
 
     public static void main(String[] args) {
-        HttpRequest r = HttpRequest.get(NAN_HANG_VERIFY_URL)
-                .header(USER_AGENT_NAME, USER_AGENT_VALUE)
-                .header(COOKIE_NAME, "maotai=aaaaaaa");
-        System.out.println();
+//        HttpRequest r = HttpRequest.get(NAN_HANG_VERIFY_URL)
+//                .header(USER_AGENT_NAME, USER_AGENT_VALUE)
+//                .header(COOKIE_NAME, "maotai=aaaaaaa");
+//        System.out.println();
+
+        HttpRequest request = HttpRequest.get("https://google.com").header(USER_AGENT_NAME, USER_AGENT_VALUE);
+//Configure proxy
+        request.useProxy("localhost", 8080);
+//Optional proxy basic authentication
+        request.proxyBasic("username", "p4ssw0rd");
     }
 
 }
