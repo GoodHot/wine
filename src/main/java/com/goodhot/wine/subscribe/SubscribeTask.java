@@ -10,6 +10,7 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Service
@@ -61,6 +62,17 @@ public class SubscribeTask {
             }
         }
         System.out.println("================获取数据结束================");
+    }
+
+    public static void main(String[] args) throws Exception {
+        HttpProxyServer proxy = new HttpProxyTask().getOne();
+        NanHangRequest nanHangRequest = new NanHangRequest();
+        nanHangRequest.getPage(NanHangRequest.NAN_HANG_URL, proxy);
+        CustomerUtil customerUtil = new CustomerUtil().init(CustomerData.mockCustomerDate());
+        for (CustomerData.Customer c : customerUtil.listMatchDate("11月15日 上午")) {
+            c.setCode(nanHangRequest.getCaptcha(nanHangRequest.getCookieMaotai(), proxy));
+            nanHangRequest.postSubscribe(c.toMap(), proxy);
+        }
     }
 
 }

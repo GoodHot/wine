@@ -40,7 +40,7 @@ public class CustomerUtil {
      *                     ]
      *                     }
      */
-    public void init(String customerJson) {
+    public CustomerUtil init(String customerJson) {
         this.customerData = JSON.parseObject(customerJson, CustomerData.class);
         Multimap<String, CustomerData.Customer> temp = ArrayListMultimap.create();
         for (CustomerData.Customer customer : this.customerData.getCustomers()) {
@@ -49,6 +49,7 @@ public class CustomerUtil {
             }
         }
         this.customerDataMap = temp;
+        return this;
     }
 
     /**

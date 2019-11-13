@@ -142,6 +142,7 @@ public class NanHangRequest {
                 .header(USER_AGENT_NAME, USER_AGENT_VALUE)
                 .header(COOKIE_NAME, cookieMaotai);
         setProxyServer(req, proxyServer);
+        // 10500 代表 5位数字验证码
         Util.HttpResp rst = fateadmApi.Predict("10500", req.body().getBytes());
         if (rst.ret_code != 0) {
             throw new Exception(rst.err_msg);
