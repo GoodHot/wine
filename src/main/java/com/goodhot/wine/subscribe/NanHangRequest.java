@@ -188,12 +188,4 @@ public class NanHangRequest {
                 .header("Host", "no-cache")
         ;
     }
-
-    public static void main(String[] args) {
-        HttpRequest r = HttpRequest.get(NAN_HANG_VERIFY_URL)
-                .header(USER_AGENT_NAME, USER_AGENT_VALUE)
-                .header(COOKIE_NAME, "maotai=aaaaaaa");
-        System.out.println();
-    }
-
 }

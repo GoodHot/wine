@@ -17,19 +17,10 @@ public class TaskConfig {
     @Autowired
     private HttpProxyTask httpProxyTask;
 
-//    @Scheduled(cron = "0/5 * * * * ?")
-//    public void schedule() throws Exception {
-//        try {
-//            subscribeService.task();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-    @Scheduled(cron = "0/1 * * * * ?")
+    @Scheduled(cron = "0/5 * * * * ?")
     public void schedule() throws Exception {
         try {
-            subscribeService.test();
+            subscribeService.task();
         } catch (IOException e) {
             e.printStackTrace();
         }

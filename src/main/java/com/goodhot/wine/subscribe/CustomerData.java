@@ -13,7 +13,7 @@ public class CustomerData {
     private List<Customer> customers;
 
     @Data
-    class Customer {
+    public class Customer {
         public static final String MEMBER = "member";
         public static final String NAME = "name";
         public static final String ID_CARD = "id-card";

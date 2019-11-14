@@ -61,14 +61,6 @@ public class SubscribeTask {
         System.out.println("================获取数据结束================");
     }
 
-    public void test() throws Exception {
-        HttpProxyServer proxy = httpProxyTask.getOne();
-        nanHangRequest.getPage(NanHangRequest.NAN_HANG_URL, proxy);
-        customerUtil.init(CustomerData.mockCustomerDate());
-        for (CustomerData.Customer c : customerUtil.listMatchDate("11月15日 上午")) {
-            c.setCode(nanHangRequest.getCaptcha(nanHangRequest.getCookieMaotai(), proxy));
-            nanHangRequest.postSubscribe(c.toMap("11月15日 上午"), proxy);
-        }
-    }
+
 
 }

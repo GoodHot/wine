@@ -72,10 +72,4 @@ public class CustomerUtil {
     public CustomerData.Customer[] listMatchDate(String date) {
         return this.customerDataMap.get(date).toArray(new CustomerData.Customer[]{});
     }
-
-    public static void main(String[] args) {
-        CustomerUtil customerUtil = new CustomerUtil();
-        customerUtil.init(CustomerData.mockCustomerDate());
-        System.out.println();
-    }
 }
